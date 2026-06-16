@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <title>Simulador de Holerite ERP - V6.0 PRO</title>
+    <style>
+        :root {
+            --primary: #005073; 
+            --secondary: #107c10; 
+            --danger: #d13438; 
+            --bg-body: #f4f6f9;
+            --bg-panel: #ffffff;
+            --border: #e1dfdd;
+            --text-dark: #323130;
+            --text-light: #605e5c;
+        }
+        
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg-body); margin: 0; padding: 15px; color: var(--text-dark); }
+        .app-container { max-width: 1000px; margin: 0 auto; }
+        
+        h2 { text-align: center; color: var(--primary); margin-top: 0; font-size: 22px; border-bottom: 2px solid var(--primary); padding-bottom: 10px; background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 20px;}
+        
+        /* Layout Grid Principal */
+        .main-grid { display: grid; grid-template-columns: 1fr; gap: 20px; }
+        @media (min-width: 800px) { .main-grid { grid-template-columns: 1.8fr 1fr; } }
+        
+        .panel { background: var(--bg-panel); padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.08); }
+        
+        /* Formulários e Inputs */
+        fieldset { border: 1px solid var(--border); border-radius: 6px; margin-bottom: 15px; padding: 12px; background: #faf9f8; }
+        legend { font-weight: 600; color: var(--primary); font-size: 13px; background: #edebe9; padding: 4px 12px; border-radius: 4px; border: 1px solid var(--border); }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+        
+        .form-group { margin-bottom: 8px; }
+        label { display: block; font-weight: 600; margin-bottom: 4px; font-size: 12px; color: var(--text-light); }
+        input[type="text"], input[type="number"], select { 
+            width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 4px; 
+            box-sizing: border-box; font-size: 15px; background: #fff; 
+            -webkit-appearance: none; 
+        }
+        input:focus, select:focus { border-color: var(--primary); outline: none; }
+        .checkbox-group { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; margin-top: 20px; }
+        
+        /* Botões */
+        .btn-group { display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap; }
+        button { 
+            flex: 1; min-width: 140px; padding: 12px; border: none; border-radius: 4px; 
+            font-size: 14px; font-weight: bold; cursor: pointer; color: white; 
+            -webkit-appearance: none; 
+        }
+        button:hover { opacity: 0.9; }
+        .btn-primary { background: var(--primary); }
+        .btn-random { background: #605e5c; }
+        .btn-print { background: var(--secondary); margin-top: 15px; width: 100%; }
+        
+        /* Tabelas Laterais (Referência) */
+        .ref-box { background: #fff; border: 1px solid var(--primary); border-radius: 6px; margin-bottom: 15px; overflow: hidden; }
+        .ref-title { background: var(--primary); color: white; font-size: 13px; font-weight: bold; padding: 8px; text-align: center; }
+        .ref-table { width: 100%; border-collapse: collapse; font-size: 11px; text-align: center; }
+        .ref-table th, .ref-table td { border: 1px solid var(--border); padding: 5px; }
+        .ref-table th { background: #f4f6f9; color: var(--text-dark); }
+        .info-dep { font-size: 12px; text-align: center; padding: 10px; background: #eef9fd; font-weight: bold; border-radius: 6px; border: 1px dashed #005073; }
+        .update-badge { background: #ffb900; color: #000; font-size: 10px; padding: 2px 6px; border-radius: 10px; vertical-align: middle; margin-left: 5px; font-weight: bold;}
+
+        /* Dashboard Resumo */
+        .dashboard { display: none; margin-top: 25px; padding: 15px; border-radius: 6px; background: #fff; border: 1px solid var(--border); }
+        .dash-cards { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; text-align: center; margin-bottom: 15px; }
+        .card { padding: 10px; border-radius: 6px; background: #f8f9fa; border: 1px solid var(--border); }
+        .card-title { font-size: 11px; font-weight: bold; color: var(--text-light); text-transform: uppercase; }
+        .card-value { font-size: 16px; font-weight: bold; margin-top: 5px; }
+        .val-bruto { color: var(--secondary); }
+        .val-desc { color: var(--danger); }
+        .val-liq { color: var(--primary); font-size: 18px; }
+        .progress-container { width: 100%; height: 10px; background: var(--danger); border-radius: 5px; overflow: hidden; display: flex; }
+        .progress-liquid { background: var(--secondary); height: 100%; transition: width 0.5s ease; }
+        
+        /* Holerite Real */
+        .holerite-wrapper { margin-top: 20px; display: none; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        .holerite-table { width: 100%; min-width: 550px; border-collapse: collapse; font-size: 11px; font-family: 'Courier New', Courier, monospace; background: #fff; border: 2px solid #000; }
+        .holerite-table td, .holerite-table th { border: 1px solid #000; padding: 4px 6px; vertical-align: middle; }
+        .text-right { text-align: right; }
+        .text-center { text-align: center; }
+        .shading { background: #f2f2f2; font-weight: bold; }
+        .valores-linhas td { height: 18px; }
+        
+        .assinaturas { margin-top: 20px; display: flex; justify-content: space-between; gap: 20px; text-align: center; font-size: 12px; }
+        .linha-ass { border-top: 1px solid #000; padding-top: 5px; width: 45%; margin-top: 30px; }
+
+        /* MODO IMPRESSÃO PERFEITO */
+        @media print {
+            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            /* Esconde apenas os campos e botões, não a caixa que segura o holerite */
+            fieldset, .sidebar-refs, h2, .btn-print, .btn-group { display: none !important; }
+            
+            body, .app-container, .main-grid, .panel { 
+                background: white !important; 
+                padding: 0 !important; 
+                box-shadow: none !important; 
+                margin: 0 !important; 
+                max-width: 100% !important; 
+                border: none !important;
+                display: block !important;
+            }
+            
+            #resultadoTotal, .dashboard, .holerite-wrapper { 
+                display: block !important; 
+                margin-top: 0 !important; 
+                overflow: visible !important; 
+                width: 100% !important;
+            }
+            
+            .holerite-table { border: 2px solid #000 !important; width: 100% !important; min-width: 100% !important; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <h2>Sistema RH - Simulador Integrado 📱</h2>
+    
+    <div class="main-grid">
+        <div class="panel input-panel">
+            <fieldset>
+                <legend>🏢 Dados Corporativos</legend>
+                <div class="grid-2">
+                    <div class="form-group"><label>Matrícula:</label><input type="text" id="matricula" value="001092"></div>
+                    <div class="form-group"><label>Competência:</label><input type="text" id="competencia" value=""></div>
+                </div>
+                <div class="grid-2">
+                    <div class="form-group"><label>Nome do Funcionário:</label><input type="text" id="nome" value=""></div>
+                    <div class="form-group"><label>Cargo:</label><input type="text" id="cargo" value=""></div>
+                </div>
+                <div class="grid-2">
+                    <div class="form-group"><label>Salário Base (R$):</label><input type="number" id="salario" value="0"></div>
+                    <div class="form-group"><label>Jornada (Horas/Mês):</label><input type="number" id="jornada" value="220"></div>
+                </div>
+            </fieldset>
+
+            <fieldset>
+                <legend>📅 Calendário DSR</legend>
+                <div class="grid-2">
+                    <div class="form-group"><label>Dias Úteis:</label><input type="number" id="dias_uteis" value="23"></div>
+                    <div class="form-group"><label>DSRs/Feriados:</label><input type="number" id="dias_dsr" value="7"></div>
+                </div>
+            </fieldset>
+
+            <fieldset>
+                <legend>💰 Adicionais e Variáveis</legend>
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>Tipo de Adicional (%):</label>
+                        <div style="display: flex; gap: 5px;">
+                            <select id="tipo_adic" style="width: 65%;">
+                                <option value="Periculosidade">Periculosidade</option>
+                                <option value="Insalubridade">Insalubridade</option>
+                                <option value="Adic. Noturno">Adic. Noturno</option>
+                            </select>
+                            <input type="number" id="perc_adic" placeholder="%" value="0" style="width: 35%;">
+                        </div>
+                        <small style="font-size: 10px; color: #888;">*Insalubridade: calc. s/ Salário Mínimo</small>
+                    </div>
+                    <div class="form-group">
+                        <label>Horas Extras 50% (Qtd):</label>
+                        <input type="number" id="horas_extras" value="0">
+                    </div>
+                </div>
+            </fieldset>
+
+            <fieldset>
+                <legend>🔻 Descontos Oficiais</legend>
+                <div class="grid-2">
+                    <div class="form-group"><label>Faltas + DSR (Dias):</label><input type="number" id="faltas_dias" value="0"></div>
+                    <div class="form-group"><label>Nº Dependentes:</label><input type="number" id="dependentes" value="0"></div>
+                </div>
+                <div class="grid-2" style="margin-top:10px;">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="desc_vt" checked> Descontar VT (6%)
+                    </div>
+                    <div class="form-group">
+                        <label>Vale Refeição (R$ Fixo):</label>
+                        <input type="number" id="desc_vr" value="0">
+                    </div>
+                </div>
+            </fieldset>
+            
+            <div class="btn-group">
+                <button class="btn-random" onclick="modoProfessor()">🎲 Gerar Caso Aleatório</button>
+                <button class="btn-primary" onclick="gerarHolerite()">Gerar Folha ▶</button>
+            </div>
+            
+            <div id="resultadoTotal" style="display: none;">
+                <div id="dashboardArea" class="dashboard">
+                    <div class="dash-cards">
+                        <div class="card"><div class="card-title">Salário Bruto</div><div class="card-value val-bruto" id="dash-bruto">R$ 0,00</div></div>
+                        <div class="card"><div class="card-title">Descontos</div><div class="card-value val-desc" id="dash-desc">R$ 0,00</div></div>
+                        <div class="card"><div class="card-title">Salário Líquido</div><div class="card-value val-liq" id="dash-liq">R$ 0,00</div></div>
+                    </div>
+                    <div class="progress-container"><div class="progress-liquid" id="dash-bar" style="width: 50%"></div></div>
+                </div>
+                
+                <div id="holeriteArea" class="holerite-wrapper">
+                    <table class="holerite-table">
+                        <tr>
+                            <td colspan="3" width="50%"><strong>EMPRESA FICTÍCIA S.A.</strong><br>CNPJ: 12.345.678/0001-99</td>
+                            <td colspan="2" class="text-center"><span style="font-size:13px; font-weight:bold;">RECIBO DE PAGAMENTO DE SALÁRIO</span><br>Competência: <strong id="h-comp">-</strong></td>
+                        </tr>
+                        <tr class="shading"><td width="10%">Matrícula</td><td colspan="2">Nome do Funcionário</td><td colspan="2">Cargo</td></tr>
+                        <tr><td id="h-mat">-</td><td colspan="2" id="h-nome">-</td><td colspan="2" id="h-cargo">-</td></tr>
+                        <tr class="shading"><td width="10%">Cód.</td><td width="40%">Descrição</td><td width="15%" class="text-right">Referência</td><td width="17%" class="text-right">Vencimentos</td><td width="18%" class="text-right">Descontos</td></tr>
+                        
+                        <tr class="valores-linhas"><td>001</td><td>Salário Base</td><td class="text-right">30 dias</td><td class="text-right" id="v-base">R$ 0,00</td><td class="text-right">-</td></tr>
+                        <tr class="valores-linhas" id="row-adic"><td>002</td><td id="desc_adic">Adicional</td><td class="text-right" id="ref_adic">-</td><td class="text-right" id="v_adic">-</td><td class="text-right">-</td></tr>
+                        
+                        <tr class="valores-linhas" id="row-he"><td>003</td><td>Hora Extra 50%</td><td class="text-right" id="ref-he">-</td><td class="text-right" id="v-he">-</td><td class="text-right">-</td></tr>
+                        <tr class="valores-linhas" id="row-dsr"><td>004</td><td>DSR s/ Variáveis</td><td class="text-right">-</td><td class="text-right" id="v-dsr">-</td><td class="text-right">-</td></tr>
+                        <tr class="valores-linhas" id="row-faltas"><td>005</td><td>Faltas Injustificadas</td><td class="text-right" id="ref-faltas">-</td><td class="text-right">-</td><td class="text-right" id="d-faltas">-</td></tr>
+                        <tr class="valores-linhas" id="row-inss"><td>006</td><td>INSS Empregado</td><td class="text-right" id="ref-inss">-</td><td class="text-right">-</td><td class="text-right" id="d-inss">-</td></tr>
+                        <tr class="valores-linhas" id="row-irrf"><td>007</td><td>IRRF Retido na Fonte</td><td class="text-right" id="ref-irrf">-</td><td class="text-right">-</td><td class="text-right" id="d-irrf">-</td></tr>
+                        <tr class="valores-linhas" id="row-vt"><td>008</td><td>Vale Transporte</td><td class="text-right">6.00%</td><td class="text-right">-</td><td class="text-right" id="d-vt">-</td></tr>
+                        <tr class="valores-linhas" id="row-vr"><td>009</td><td>Vale Refeição</td><td class="text-right">Fixo</td><td class="text-right">-</td><td class="text-right" id="d-vr">-</td></tr>
+                        
+                        <tr class="valores-linhas"><td colspan="5"></td></tr>
+                        
+                        <tr><td colspan="3" class="text-right"><strong>TOTAIS</strong></td><td class="text-right" id="t-venc" style="font-weight: bold; color: green;">R$ 0,00</td><td class="text-right" id="t-desc" style="font-weight: bold; color: red;">R$ 0,00</td></tr>
+                        <tr class="shading"><td colspan="4" class="text-right" style="font-size: 12px;">VALOR LÍQUIDO ==></td><td class="text-right" id="v-liquido" style="font-size: 13px; font-weight: bold; background: #e9ecef;">R$ 0,00</td></tr>
+                        
+                        <tr class="shading"><td>Base INSS</td><td>Base FGTS</td><td>FGTS do Mês</td><td>Base IRRF</td><td>Faixa IRRF</td></tr>
+                        <tr><td id="b-inss">R$ 0,00</td><td id="b-fgts">R$ 0,00</td><td id="v-fgts" style="font-weight: bold;">R$ 0,00</td><td id="b-irrf">R$ 0,00</td><td id="b-faixa-irrf" class="text-center">0%</td></tr>
+                    </table>
+                    <div style="font-size: 10px; text-align: center; margin-top: 15px; color: gray;">DECLARO TER RECEBIDO A IMPORTÂNCIA LÍQUIDA DISCRIMINADA NESTE RECIBO.</div>
+                    <div class="assinaturas"><div class="linha-ass">Assinatura do Funcionário</div><div class="linha-ass">Responsável RH / Financeiro</div></div>
+                </div>
+                
+                <button class="btn-print" onclick="window.print()">🖨️ IMPRIMIR / SALVAR PDF</button>
+            </div>
+        </div>
+        
+        <div class="sidebar-refs">
+            <div class="info-dep">👨‍👩‍👧‍👦 Dedução por Dependente: <br><span style="color:var(--primary); font-size:16px;">R$ 189,59</span></div>
+            <br>
+            <div class="ref-box">
+                <div class="ref-title">Tabela INSS <span class="update-badge">Atualizada</span></div>
+                <table class="ref-table">
+                    <tr><th>Salário de Contribuição</th><th>Alíquota</th><th>Parcela Deduzir</th></tr>
+                    <tr><td>Até R$ 1.412,00</td><td>7,50%</td><td>-</td></tr>
+                    <tr><td>De R$ 1.412,01 a R$ 2.666,68</td><td>9,00%</td><td>R$ 21,18</td></tr>
+                    <tr><td>De R$ 2.666,69 a R$ 4.000,03</td><td>12,00%</td><td>R$ 101,18</td></tr>
+                    <tr><td>De R$ 4.000,04 a R$ 7.786,02</td><td>14,00%</td><td>R$ 181,18</td></tr>
+                    <tr><td>Acima de R$ 7.786,02</td><td>Teto</td><td>(R$ 908,85)</td></tr>
+                </table>
+            </div>
+
+            <div class="ref-box">
+                <div class="ref-title">Tabela IRRF <span class="update-badge">Nova Isenção</span></div>
+                <table class="ref-table">
+                    <tr><th>Base de Cálculo (R$)</th><th>Alíquota</th><th>Parcela Deduzir</th></tr>
+                    <tr><td>Até R$ 2.259,20</td><td>Isento</td><td>-</td></tr>
+                    <tr><td>De R$ 2.259,21 a R$ 2.826,65</td><td>7,50%</td><td>R$ 169,44</td></tr>
+                    <tr><td>De R$ 2.826,66 a R$ 3.751,05</td><td>15,00%</td><td>R$ 381,44</td></tr>
+                    <tr><td>De R$ 3.751,06 a R$ 4.664,68</td><td>22,50%</td><td>R$ 662,77</td></tr>
+                    <tr><td>Acima de R$ 4.664,68</td><td>27,50%</td><td>R$ 896,00</td></tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+window.onload = function() {
+    const hoje = new Date();
+    const mes = String(hoje.getMonth() + 1).padStart(2, '0');
+    const ano = hoje.getFullYear();
+    document.getElementById('competencia').value = `${mes}/${ano}`;
+    modoProfessor(false); 
+};
+
+function modoProfessor(mostrarAlerta = true) {
+    const nomes = ["Carlos Silva", "Ana Costa", "Marcos Rocha", "Julia Lima", "Fernanda Alves", "Roberto Souza", "Mariana Santos", "João Pedro", "Beatriz Oliveira", "Lucas Pereira"];
+    const cargos = ["Auxiliar Adm", "Assistente RH", "Vendedor", "Suporte TI", "Coordenador", "Analista Financeiro"];
+    
+    document.getElementById('matricula').value = Math.floor(Math.random() * 90000) + 10000;
+    document.getElementById('nome').value = nomes[Math.floor(Math.random() * nomes.length)];
+    document.getElementById('cargo').value = cargos[Math.floor(Math.random() * cargos.length)];
+    document.getElementById('salario').value = (Math.floor(Math.random() * 50) * 100) + 1500; 
+    
+    // Sortear tipo de adicional
+    let adicTipos = ["Periculosidade", "Insalubridade", "Adic. Noturno"];
+    let temAdic = Math.random() > 0.6;
+    document.getElementById('tipo_adic').value = adicTipos[Math.floor(Math.random() * adicTipos.length)];
+    
+    if (temAdic) {
+        let tipo = document.getElementById('tipo_adic').value;
+        if (tipo === "Periculosidade") document.getElementById('perc_adic').value = 30;
+        if (tipo === "Insalubridade") document.getElementById('perc_adic').value = 20; 
+        if (tipo === "Adic. Noturno") document.getElementById('perc_adic').value = 20;
+    } else {
+        document.getElementById('perc_adic').value = 0;
+    }
+    
+    document.getElementById('horas_extras').value = Math.random() > 0.6 ? Math.floor(Math.random() * 20) + 1 : 0;
+    document.getElementById('faltas_dias').value = Math.random() > 0.8 ? Math.floor(Math.random() * 3) + 1 : 0;
+    document.getElementById('dependentes').value = Math.floor(Math.random() * 4); 
+    document.getElementById('desc_vr').value = Math.random() > 0.5 ? (Math.floor(Math.random() * 5) * 10) + 20 : 0; 
+    
+    document.getElementById('resultadoTotal').style.display = 'none';
+    
+    if (mostrarAlerta) { alert("🎲 NOVO CASO GERADO! Analise os dados e gere a folha."); }
+}
+
+function gerarHolerite() {
+    let mat = document.getElementById('matricula').value;
+    let comp = document.getElementById('competencia').value;
+    let nome = document.getElementById('nome').value || "-";
+    let cargo = document.getElementById('cargo').value || "-";
+    
+    let salario = parseFloat(document.getElementById('salario').value) || 0;
+    let jornada = parseFloat(document.getElementById('jornada').value) || 220;
+    let dias_uteis = parseFloat(document.getElementById('dias_uteis').value) || 23;
+    let dias_dsr = parseFloat(document.getElementById('dias_dsr').value) || 7;
+    
+    let tipo_adic = document.getElementById('tipo_adic').value;
+    let perc_adic = parseFloat(document.getElementById('perc_adic').value) || 0;
+    
+    let he_qtd = parseFloat(document.getElementById('horas_extras').value) || 0;
+    let faltas_dias = parseFloat(document.getElementById('faltas_dias').value) || 0;
+    let dependentes = parseInt(document.getElementById('dependentes').value) || 0;
+    let vr_valor = parseFloat(document.getElementById('desc_vr').value) || 0;
+    let cobra_vt = document.getElementById('desc_vt').checked;
+    
+    // 1. Proventos e Adicionais
+    let v_adic = 0;
+    if(perc_adic > 0) {
+        if(tipo_adic === "Insalubridade") {
+            v_adic = 1412.00 * (perc_adic / 100); 
+        } else {
+            v_adic = salario * (perc_adic / 100); 
+        }
+    }
+    
+    let valor_hora_base = (salario + v_adic) / jornada;
+    let v_he = valor_hora_base * 1.5 * he_qtd;
+    let v_dsr = (dias_uteis > 0 && v_he > 0) ? (v_he / dias_uteis) * dias_dsr : 0;
+    
+    let total_vencimentos = salario + v_adic + v_he + v_dsr;
+    
+    // 2. Faltas e Benefícios (Descontos)
+    let d_faltas = ((salario + v_adic) / 30) * faltas_dias; 
+    let d_vt = cobra_vt ? (salario * 0.06) : 0; 
+    let d_vr = vr_valor;
+    
+    // 3. INSS
+    let base_inss = total_vencimentos - d_faltas;
+    if (base_inss < 0) base_inss = 0;
+    
+    let inss = 0;
+    let faixaInssText = "0%";
+    if (base_inss <= 1412.00) { inss = base_inss * 0.075; faixaInssText = "7.5%"; }
+    else if (base_inss <= 2666.68) { inss = (base_inss * 0.09) - 21.18; faixaInssText = "9%"; }
+    else if (base_inss <= 4000.03) { inss = (base_inss * 0.12) - 101.18; faixaInssText = "12%"; }
+    else if (base_inss <= 7786.02) { inss = (base_inss * 0.14) - 181.18; faixaInssText = "14%"; }
+    else { inss = 908.85; faixaInssText = "Teto Máx"; }
+    
+    // 4. IRRF
+    let base_irrf = base_inss - inss - (189.59 * dependentes);
+    let irrf = 0;
+    let faixaIrrfText = "0%";
+    if (base_irrf <= 2259.20) { irrf = 0; faixaIrrfText = "Isento"; }
+    else if (base_irrf <= 2826.65) { irrf = (base_irrf * 0.075) - 169.44; faixaIrrfText = "7.5%"; }
+    else if (base_irrf <= 3751.05) { irrf = (base_irrf * 0.15) - 381.44; faixaIrrfText = "15%"; }
+    else if (base_irrf <= 4664.68) { irrf = (base_irrf * 0.225) - 662.77; faixaIrrfText = "22.5%"; }
+    else { irrf = (base_irrf * 0.275) - 896.00; faixaIrrfText = "27.5%"; }
+    if (irrf < 0) irrf = 0;
+    
+    let total_descontos = d_faltas + d_vt + d_vr + inss + irrf;
+    let salario_liquido = total_vencimentos - total_descontos;
+    let fgts = base_inss * 0.08;
+    
+    const f = (v) => "R$ " + v.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    
+    document.getElementById('dash-bruto').innerText = f(total_vencimentos);
+    document.getElementById('dash-desc').innerText = f(total_descontos);
+    document.getElementById('dash-liq').innerText = f(salario_liquido);
+    
+    let percLiq = total_vencimentos > 0 ? (salario_liquido / total_vencimentos) * 100 : 0;
+    document.getElementById('dash-bar').style.width = Math.max(0, percLiq) + "%";
+
+    document.getElementById('h-mat').innerText = mat;
+    document.getElementById('h-comp').innerText = comp;
+    document.getElementById('h-nome').innerText = nome;
+    document.getElementById('h-cargo').innerText = cargo;
+    
+    document.getElementById('desc_adic').innerText = tipo_adic;
+    document.getElementById('ref_adic').innerText = perc_adic + "%";
+    document.getElementById('v_adic').innerText = f(v_adic);
+    document.getElementById('row-adic').style.display = v_adic > 0 ? 'table-row' : 'none';
+    
+    document.getElementById('row-he').style.display = v_he > 0 ? 'table-row' : 'none';
+    document.getElementById('row-dsr').style.display = v_dsr > 0 ? 'table-row' : 'none';
+    document.getElementById('row-faltas').style.display = d_faltas > 0 ? 'table-row' : 'none';
+    document.getElementById('row-vt').style.display = d_vt > 0 ? 'table-row' : 'none';
+    document.getElementById('row-vr').style.display = d_vr > 0 ? 'table-row' : 'none';
+    
+    document.getElementById('v-base').innerText = f(salario);
+    document.getElementById('ref-he').innerText = he_qtd + " hrs";
+    document.getElementById('v-he').innerText = f(v_he);
+    document.getElementById('v-dsr').innerText = f(v_dsr);
+    
+    document.getElementById('ref-faltas').innerText = faltas_dias + " dias";
+    document.getElementById('d-faltas').innerText = f(d_faltas);
+    document.getElementById('d-vt').innerText = f(d_vt);
+    document.getElementById('d-vr').innerText = f(d_vr);
+    
+    document.getElementById('ref-inss').innerText = faixaInssText;
+    document.getElementById('d-inss').innerText = f(inss);
+    
+    document.getElementById('ref-irrf').innerText = faixaIrrfText;
+    document.getElementById('d-irrf').innerText = irrf > 0 ? f(irrf) : "-";
+    
+    document.getElementById('t-venc').innerText = f(total_vencimentos);
+    document.getElementById('t-desc').innerText = f(total_descontos);
+    document.getElementById('v-liquido').innerText = f(salario_liquido);
+    
+    document.getElementById('b-inss').innerText = f(base_inss);
+    document.getElementById('b-fgts').innerText = f(base_inss);
+    document.getElementById('v-fgts').innerText = f(fgts);
+    document.getElementById('b-irrf').innerText = f(base_irrf > 0 ? base_irrf : 0);
+    document.getElementById('b-faixa-irrf').innerText = faixaIrrfText;
+    
+    document.getElementById('resultadoTotal').style.display = 'block';
+
+    setTimeout(() => {
+        const elemento = document.getElementById('resultadoTotal');
+        const topo = elemento.getBoundingClientRect().top + window.scrollY - 20;
+        window.scrollTo({ top: topo, behavior: 'smooth' });
+    }, 200);
+}
+</script>
+</body>
+</html>
